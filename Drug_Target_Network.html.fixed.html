@@ -1,0 +1,613 @@
+<html>
+<head>
+<meta charset="utf-8">
+
+<script>
+function neighbourhoodHighlight(params) {
+allNodes = nodes.get({ returnType: 'Object' });
+if (params.nodes.length > 0) {
+highlightActive = true;
+var i, j;
+var selectedNode = params.nodes[0];
+var degrees = 2;
+
+for (let nodeId in allNodes) {
+allNodes[nodeId].color = 'rgba(200,200,200,0.5)';
+if (allNodes[nodeId].hiddenLabel === undefined) {
+allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+allNodes[nodeId].label = undefined;
+}
+}
+var connectedNodes = network.getConnectedNodes(selectedNode);
+var allConnectedNodes = [];
+
+for (i = 1; i < degrees; i++) {
+for (j = 0; j < connectedNodes.length; j++) {
+allConnectedNodes = allConnectedNodes.concat(
+network.getConnectedNodes(connectedNodes[j])
+);
+}
+}
+
+for (i = 0; i < allConnectedNodes.length; i++) {
+allNodes[allConnectedNodes[i]].color = 'rgba(150,150,150,0.75)';
+if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+allNodes[allConnectedNodes[i]].label =
+allNodes[allConnectedNodes[i]].hiddenLabel;
+allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+}
+}
+
+for (i = 0; i < connectedNodes.length; i++) {
+allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+allNodes[connectedNodes[i]].label =
+allNodes[connectedNodes[i]].hiddenLabel;
+allNodes[connectedNodes[i]].hiddenLabel = undefined;
+}
+}
+
+
+allNodes[selectedNode].color = nodeColors[selectedNode];
+if (allNodes[selectedNode].hiddenLabel !== undefined) {
+allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+allNodes[selectedNode].hiddenLabel = undefined;
+}
+} else if (highlightActive === true) {
+
+for (let nodeId in allNodes) {
+allNodes[nodeId].color = nodeColors[nodeId];
+if (allNodes[nodeId].hiddenLabel !== undefined) {
+allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+allNodes[nodeId].hiddenLabel = undefined;
+}
+}
+highlightActive = false;
+}
+
+var updateArray = [];
+if (params.nodes.length > 0) {
+for (let nodeId in allNodes) {
+if (allNodes.hasOwnProperty(nodeId)) {
+updateArray.push(allNodes[nodeId]);
+}
+}
+nodes.update(updateArray);
+} else {
+for (let nodeId in allNodes) {
+if (allNodes.hasOwnProperty(nodeId)) {
+updateArray.push(allNodes[nodeId]);
+}
+}
+nodes.update(updateArray);
+}
+}
+
+function filterHighlight(params) {
+allNodes = nodes.get({ returnType: 'Object' });
+if (params.nodes.length > 0) {
+filterActive = true;
+let selectedNodes = params.nodes;
+
+for (let nodeId in allNodes) {
+allNodes[nodeId].hidden = true;
+if (allNodes[nodeId].savedLabel === undefined) {
+allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+allNodes[nodeId].label = undefined;
+}
+}
+
+for (let i=0; i < selectedNodes.length; i++) {
+allNodes[selectedNodes[i]].hidden = false;
+if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+allNodes[selectedNodes[i]].savedLabel = undefined;
+}
+}
+
+} else if (filterActive === true) {
+for (let nodeId in allNodes) {
+allNodes[nodeId].hidden = false;
+if (allNodes[nodeId].savedLabel !== undefined) {
+allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+allNodes[nodeId].savedLabel = undefined;
+}
+}
+filterActive = false;
+}
+
+var updateArray = [];
+if (params.nodes.length > 0) {
+for (let nodeId in allNodes) {
+if (allNodes.hasOwnProperty(nodeId)) {
+updateArray.push(allNodes[nodeId]);
+}
+}
+nodes.update(updateArray);
+} else {
+for (let nodeId in allNodes) {
+if (allNodes.hasOwnProperty(nodeId)) {
+updateArray.push(allNodes[nodeId]);
+}
+}
+nodes.update(updateArray);
+}
+}
+
+function selectNode(nodes) {
+network.selectNodes(nodes);
+neighbourhoodHighlight({ nodes: nodes });
+return nodes;
+}
+
+function selectNodes(nodes) {
+network.selectNodes(nodes);
+filterHighlight({nodes: nodes});
+return nodes;
+}
+
+function highlightFilter(filter) {
+let selectedNodes = []
+let selectedProp = filter['property']
+if (filter['item'] === 'node') {
+let allNodes = nodes.get({ returnType: 'Object' });
+for (let nodeId in allNodes) {
+if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+selectedNodes.push(nodeId)
+}
+}
+}
+else if (filter['item'] === 'edge'){
+let allEdges = edges.get({returnType: 'object'});
+for (let edge in allEdges) {
+if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+selectedNodes.push(allEdges[edge]['from'])
+selectedNodes.push(allEdges[edge]['to'])
+}
+}
+}
+selectNodes(selectedNodes)
+}
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+                <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet">
+
+                <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+
+
+
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+rel="stylesheet"
+integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+crossorigin="anonymous"
+/>
+<script
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+crossorigin="anonymous"
+></script>
+
+
+<center>
+<h1></h1>
+</center>
+<style type="text/css">
+
+#mynetwork {
+width: 100%;
+height: 600px;
+background-color: #ffffff;
+border: 1px solid lightgray;
+position: relative;
+float: left;
+}
+
+
+#loadingBar {
+position:absolute;
+top:0px;
+left:0px;
+width: 100%;
+height: 600px;
+background-color:rgba(200,200,200,0.8);
+-webkit-transition: all 0.5s ease;
+-moz-transition: all 0.5s ease;
+-ms-transition: all 0.5s ease;
+-o-transition: all 0.5s ease;
+transition: all 0.5s ease;
+opacity:1;
+}
+
+#bar {
+position:absolute;
+top:0px;
+left:0px;
+width:20px;
+height:20px;
+margin:auto auto auto auto;
+border-radius:11px;
+border:2px solid rgba(30,30,30,0.05);
+background: rgb(0, 173, 246); /* Old browsers */
+box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+}
+
+#border {
+position:absolute;
+top:10px;
+left:10px;
+width:500px;
+height:23px;
+margin:auto auto auto auto;
+box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+border-radius:10px;
+}
+
+#text {
+position:absolute;
+top:8px;
+left:530px;
+width:30px;
+height:50px;
+margin:auto auto auto auto;
+font-size:22px;
+color: #000000;
+}
+
+div.outerBorder {
+position:relative;
+top:400px;
+width:600px;
+height:44px;
+margin:auto auto auto auto;
+border:8px solid rgba(0,0,0,0.1);
+background: rgb(252,252,252); /* Old browsers */
+background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+border-radius:72px;
+box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+}
+
+
+
+#config {
+float: left;
+width: 400px;
+height: 600px;
+}
+
+
+
+</style>
+</head>
+
+
+<body>
+<div class="card" style="width: 100%">
+
+
+<div id="filter-menu" class="card-header">
+<div class="row no-gutters">
+<div class="col-3 pb-2">
+<select
+class="form-select"
+aria-label="Default select example"
+onchange="updateFilter(value, 'item')"
+id="select-item"
+>
+<option value="">Select a network item</option>
+<option value="edge">edge</option>
+<option value="node">node</option>
+</select>
+</div>
+<div class="col-3 pb-2">
+<select
+class="form-select"
+aria-label="Default select example"
+onchange="updateFilter(value, 'property')"
+id="select-property"
+>
+<option value="">Select a property...</option>
+</select>
+</div>
+<div class="col-3 pb-2">
+<select
+class="form-select"
+aria-label="Default select example"
+id="select-value"
+>
+<option value="">Select value(s)...</option>
+</select>
+</div>
+<div class="col-1 pb-2">
+<button type="button" class="btn btn-primary btn-block" onclick="highlightFilter(filter);">Filter</button>
+</div>
+<div class="col-2 pb-2">
+<button type="button" class="btn btn-primary btn-block" onclick="clearFilter(true)">Reset Selection</button>
+</div>
+</div>
+</div>
+
+<div id="mynetwork" class="card-body"></div>
+</div>
+
+
+<div id="loadingBar">
+<div class="outerBorder">
+<div id="text">0%</div>
+<div id="border">
+<div id="bar"></div>
+</div>
+</div>
+</div>
+
+
+<div id="config"></div>
+
+
+<script type="text/javascript">
+
+// initialize global variables.
+var edges;
+var nodes;
+var allNodes;
+var allEdges;
+var nodeColors;
+var originalNodes;
+var network;
+var container;
+var options, data;
+var filter = {
+item : '',
+property : '',
+value : []
+};
+
+
+
+
+// explicitly using onItemAdd and this function as we need to save multiple values
+let updateValueFilter = function() {
+return function () {
+filter['value'].push(arguments[0])
+}
+}
+
+let valueControl = new TomSelect("#select-value",{
+maxItems: null,
+valueField: 'id',
+labelField: 'title',
+searchField: 'title',
+create: false,
+sortField: {
+field: "text",
+direction: "asc"
+},
+onItemAdd: updateValueFilter()
+});
+
+let addValues = function() {
+return function () {
+// clear the current value options and add the selected attribute values
+// tom-select handles duplicates
+let selectedProperty = arguments[0];
+valueControl.clear();
+valueControl.clearOptions();
+filter['value'] = []
+if (filter['item'] === 'node') {
+for (let each in allNodes) {
+valueControl.addOption({
+id:allNodes[each][selectedProperty],
+title:allNodes[each][selectedProperty]
+})
+}
+}
+else if (filter['item'] === 'edge') {
+for (let each in allEdges) {
+valueControl.addOption({
+id:allEdges[each][selectedProperty],
+title:allEdges[each][selectedProperty]
+})
+}
+}
+}
+};
+
+let propControl = new TomSelect("#select-property",{
+valueField: 'id',
+labelField: 'title',
+searchField: 'title',
+create: false,
+sortField: {
+field: "text",
+direction: "asc"
+},
+onItemAdd: addValues()
+});
+
+let addProperties = function() {
+return function () {
+// loops through the selected network item and adds the attributes to dropdown
+// tom-select handles duplicates
+clearFilter(false)
+if (arguments[0] === 'edge') {
+for (let each in allEdges) {
+if (allEdges.hasOwnProperty(each)) {
+for (let eachProp in allEdges[each]) {
+if (allEdges[each].hasOwnProperty(eachProp)) {
+propControl.addOption({id: eachProp, title: eachProp})
+}
+}
+}
+}
+}
+else if (arguments[0] === 'node') {
+for (let each in allNodes) {
+if (allNodes.hasOwnProperty(each)) {
+for (let eachProp in allNodes[each]) {
+if (allNodes[each].hasOwnProperty(eachProp)
+&& (eachProp !== 'hidden' && eachProp !== 'savedLabel'
+&& eachProp !== 'hiddenLabel')) {
+propControl.addOption({id: eachProp, title: eachProp})
+
+}
+}
+}
+}
+}
+}
+};
+
+let itemControl = new TomSelect("#select-item",{
+create: false,
+sortField:{
+field: "text",
+direction: "asc"
+},
+onItemAdd: addProperties()
+});
+
+function clearFilter(reset) {
+// utility function to clear all the selected filter options
+// if reset is set to true, the existing filter will be removed
+// else, only the dropdown options are cleared
+propControl.clear();
+propControl.clearOptions();
+valueControl.clear();
+valueControl.clearOptions();
+filter = {
+item : '',
+property : '',
+value : []
+}
+if (reset) {
+itemControl.clear();
+filterHighlight({nodes: []})
+}
+}
+
+function updateFilter(value, key) {
+// key could be 'item' or 'property' and value is as selected in dropdown
+filter[key] = value
+}
+
+
+
+// This method is responsible for drawing the graph, returns the drawn network
+function drawGraph() {
+var container = document.getElementById('mynetwork');
+
+
+
+// parsing and collecting nodes and edges from the python
+nodes = new vis.DataSet([{"color": "#3DB6A5", "id": 0, "label": "fluorouracil", "shape": "dot", "size": 12.519685039370078}, {"color": "#FF999A", "id": 1, "label": "DNM2 protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#FFDF6E", "id": 2, "label": "human calcitonin", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 3, "label": "Ryanodine Receptor 1, Human", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 4, "label": "Double-Stranded RNA-Specific Adenosine Deaminase", "shape": "dot", "size": 14.094488188976378}, {"color": "#FF999A", "id": 5, "label": "Endoribonucleases", "shape": "dot", "size": 13.149606299212598}, {"color": "#3DB6A5", "id": 6, "label": "3\u0027,5\u0027-dichloromethotrexate", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 7, "label": "Therapeutic Testosterone", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 8, "label": "sodium salts", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 9, "label": "sulfate ion", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 10, "label": "Amyloid Proteins", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 11, "label": "Amylin", "shape": "dot", "size": 11.88976377952756}, {"color": "#FF999A", "id": 12, "label": "LRRK2 protein, human", "shape": "dot", "size": 19.448818897637793}, {"color": "#3DB6A5", "id": 13, "label": "Halotestin", "shape": "dot", "size": 15.984251968503937}, {"color": "#FF999A", "id": 14, "label": "Transferrin Receptor, human", "shape": "dot", "size": 12.519685039370078}, {"color": "#3DB6A5", "id": 15, "label": "cannabidiol", "shape": "dot", "size": 18.188976377952756}, {"color": "#FF999A", "id": 16, "label": "mismatch repair protein 1, human", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 17, "label": "aluminum", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 18, "label": "Thiazolidinediones", "shape": "dot", "size": 11.88976377952756}, {"color": "#3DB6A5", "id": 19, "label": "acetylcholine", "shape": "dot", "size": 11.88976377952756}, {"color": "#3DB6A5", "id": 20, "label": "selenium", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 21, "label": "CDR1 protein, human", "shape": "dot", "size": 11.5748031496063}, {"color": "#FFDF6E", "id": 22, "label": "liothyronine", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 23, "label": "CD4 Antigens", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 24, "label": "PTPN22 protein, human", "shape": "dot", "size": 14.409448818897637}, {"color": "#FFDF6E", "id": 25, "label": "aducanumab", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 26, "label": "Antidepressive Agents", "shape": "dot", "size": 10.0}, {"color": "#3DB6A5", "id": 27, "label": "testosterone", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 28, "label": "CFTR protein, human", "shape": "dot", "size": 17.244094488188978}, {"color": "#FF999A", "id": 29, "label": "thyroid (USP)", "shape": "dot", "size": 11.88976377952756}, {"color": "#FF999A", "id": 30, "label": "antithrombin III-protease complex", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 31, "label": "Amyloid", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 32, "label": "Glycogen Phosphorylase, Muscle Form", "shape": "dot", "size": 13.779527559055119}, {"color": "#FFDF6E", "id": 33, "label": "Peptichemio", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 34, "label": "peroxidase", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 35, "label": "penicillin G", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 36, "label": "thiamine", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 37, "label": "Insulin Receptor", "shape": "dot", "size": 10.31496062992126}, {"color": "#FFDF6E", "id": 38, "label": "N-Methylaspartate", "shape": "dot", "size": 11.88976377952756}, {"color": "#FF999A", "id": 39, "label": "alpha-Sarcoglycan", "shape": "dot", "size": 11.259842519685039}, {"color": "#FFDF6E", "id": 40, "label": "omega-N-Methylarginine", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 41, "label": "Magnesium supplements, alimentary tract and metabolism", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 42, "label": "progesterone", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 43, "label": "imidazole", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 44, "label": "Blood group antigen S", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 45, "label": "Serotransferrin, human", "shape": "dot", "size": 12.834645669291339}, {"color": "#FF999A", "id": 46, "label": "keyhole-limpet hemocyanin", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 47, "label": "ethyl ether", "shape": "dot", "size": 15.039370078740157}, {"color": "#3DB6A5", "id": 48, "label": "doxorubicin", "shape": "dot", "size": 13.779527559055119}, {"color": "#FFDF6E", "id": 49, "label": "calcitonin", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 50, "label": "Aldehyde Reductase", "shape": "dot", "size": 14.724409448818896}, {"color": "#FF999A", "id": 51, "label": "Apolipoprotein E", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 52, "label": "glucose", "shape": "dot", "size": 28.58267716535433}, {"color": "#3DB6A5", "id": 53, "label": "cisapride", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 54, "label": "Dystrophin", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 55, "label": "Fibrates", "shape": "dot", "size": 14.409448818897637}, {"color": "#3DB6A5", "id": 56, "label": "cholestyramine resin", "shape": "dot", "size": 19.448818897637793}, {"color": "#3DB6A5", "id": 57, "label": "phosphate ion", "shape": "dot", "size": 18.503937007874015}, {"color": "#3DB6A5", "id": 58, "label": "mercaptopurine", "shape": "dot", "size": 15.669291338582678}, {"color": "#FF999A", "id": 59, "label": "Medium-Chain Specific Acyl-CoA Dehydrogenase, Mitochondrial", "shape": "dot", "size": 12.834645669291339}, {"color": "#3DB6A5", "id": 60, "label": "isopropyl alcohol", "shape": "dot", "size": 17.244094488188978}, {"color": "#3DB6A5", "id": 61, "label": "pyrrolidine", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 62, "label": "TBP protein, human", "shape": "dot", "size": 11.259842519685039}, {"color": "#FFDF6E", "id": 63, "label": "Recombinant Calcitonin", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 64, "label": "niacin", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 65, "label": "lactate", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 66, "label": "Dickkopf-Related Protein 1", "shape": "dot", "size": 10.0}, {"color": "#FFDF6E", "id": 67, "label": "bleomycin", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 68, "label": "Sodium Drug Class", "shape": "dot", "size": 15.354330708661418}, {"color": "#3DB6A5", "id": 69, "label": "Progesterone [EPC]", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 70, "label": "corticotropin, human", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 71, "label": "fluorescein", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 72, "label": "busulfan", "shape": "dot", "size": 12.519685039370078}, {"color": "#FF999A", "id": 73, "label": "aspartate", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 74, "label": "guanosine", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 75, "label": "tat Protein", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 76, "label": "phosphoramidate", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 77, "label": "ethanol", "shape": "dot", "size": 21.023622047244096}, {"color": "#FF999A", "id": 78, "label": "FST protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 79, "label": "donepezil", "shape": "dot", "size": 15.984251968503937}, {"color": "#3DB6A5", "id": 80, "label": "morpholine", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 81, "label": "SAFB protein, human", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 82, "label": "TCF7L2 protein, human", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 83, "label": "Melanoma vaccine", "shape": "dot", "size": 15.984251968503937}, {"color": "#FF999A", "id": 84, "label": "Luciferases", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 85, "label": "Fibrates, lipid modifying drugs, plain", "shape": "dot", "size": 14.094488188976378}, {"color": "#3DB6A5", "id": 86, "label": "mannitol", "shape": "dot", "size": 13.149606299212598}, {"color": "#FF999A", "id": 87, "label": "BCR protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 88, "label": "CYTOCHROME C OXIDASE", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 89, "label": "Follistatin", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 90, "label": "collagen", "shape": "dot", "size": 10.0}, {"color": "#FFDF6E", "id": 91, "label": "cystine", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 92, "label": "Gamma-glutamyl transferase", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 93, "label": "Recombinant Interleukin-6", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 94, "label": "Zinc Supplements", "shape": "dot", "size": 11.5748031496063}, {"color": "#FF999A", "id": 95, "label": "Histones", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 96, "label": "Amyloid Fibrils", "shape": "dot", "size": 11.88976377952756}, {"color": "#FF999A", "id": 97, "label": "Ryanodine Receptor 1", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 98, "label": "hydrochloride", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 99, "label": "Carnitine O-Palmitoyltransferase", "shape": "dot", "size": 15.984251968503937}, {"color": "#3DB6A5", "id": 100, "label": "Carbon", "shape": "dot", "size": 22.598425196850393}, {"color": "#FF999A", "id": 101, "label": "Glucoinvertase", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 102, "label": "acetylcholinesterase", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 103, "label": "Tetracycline Antibiotics", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 104, "label": "phenindione", "shape": "dot", "size": 18.818897637795274}, {"color": "#FFDF6E", "id": 105, "label": "alpha 1-antitrypsin", "shape": "dot", "size": 18.503937007874015}, {"color": "#3DB6A5", "id": 106, "label": "hexyl 5-aminolevulinate", "shape": "dot", "size": 15.984251968503937}, {"color": "#FF999A", "id": 107, "label": "Heat shock proteins", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 108, "label": "dimethyl sulfoxide", "shape": "dot", "size": 15.669291338582678}, {"color": "#FF999A", "id": 109, "label": "leptin", "shape": "dot", "size": 21.338582677165356}, {"color": "#FF999A", "id": 110, "label": "CD45 Antigens", "shape": "dot", "size": 10.0}, {"color": "#FFDF6E", "id": 111, "label": "citrulline", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 112, "label": "MAPT protein, human", "shape": "dot", "size": 20.708661417322837}, {"color": "#3DB6A5", "id": 113, "label": "gentamicin", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 114, "label": "riboflavin", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 115, "label": "Transferrin", "shape": "dot", "size": 12.834645669291339}, {"color": "#FF999A", "id": 116, "label": "Cholinesterases", "shape": "dot", "size": 14.724409448818896}, {"color": "#3DB6A5", "id": 117, "label": "sirolimus", "shape": "dot", "size": 13.46456692913386}, {"color": "#FFDF6E", "id": 118, "label": "6-aminocaproic acid", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 119, "label": "acetate", "shape": "dot", "size": 13.46456692913386}, {"color": "#FFDF6E", "id": 120, "label": "rituximab", "shape": "dot", "size": 13.46456692913386}, {"color": "#FFDF6E", "id": 121, "label": "alteplase", "shape": "dot", "size": 10.62992125984252}, {"color": "#FFDF6E", "id": 122, "label": "alpha 1-proteinase inhibitor, human", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 123, "label": "Lactate Dehydrogenase", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 124, "label": "Thiamine Drug Class", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 125, "label": "prothrombin", "shape": "dot", "size": 14.724409448818896}, {"color": "#3DB6A5", "id": 126, "label": "Anesthetic ether", "shape": "dot", "size": 15.039370078740157}, {"color": "#3DB6A5", "id": 127, "label": "vitamin D", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 128, "label": "adenosine", "shape": "dot", "size": 17.874015748031496}, {"color": "#3DB6A5", "id": 129, "label": "Vitamin E Drug Class", "shape": "dot", "size": 11.5748031496063}, {"color": "#FFDF6E", "id": 130, "label": "Antifibrinolytic amino acids", "shape": "dot", "size": 18.818897637795274}, {"color": "#FFDF6E", "id": 131, "label": "bacitracin", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 132, "label": "Magnesium Drug Class", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 133, "label": "dimethyl fumarate", "shape": "dot", "size": 15.669291338582678}, {"color": "#FFDF6E", "id": 134, "label": "hepatitis B surface antigen vaccine", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 135, "label": "Thiazolidinedione [EPC]", "shape": "dot", "size": 11.88976377952756}, {"color": "#3DB6A5", "id": 136, "label": "Etherum, ether, Homeopathic preparation", "shape": "dot", "size": 15.039370078740157}, {"color": "#FF999A", "id": 137, "label": "TFRC protein, human", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 138, "label": "prothrombin, human", "shape": "dot", "size": 14.724409448818896}, {"color": "#3DB6A5", "id": 139, "label": "mesna", "shape": "dot", "size": 14.724409448818896}, {"color": "#3DB6A5", "id": 140, "label": "Alcohols", "shape": "dot", "size": 18.188976377952756}, {"color": "#FF999A", "id": 141, "label": "BRCA2 protein, human", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 142, "label": "uridine", "shape": "dot", "size": 12.834645669291339}, {"color": "#3DB6A5", "id": 143, "label": "galantamine", "shape": "dot", "size": 15.984251968503937}, {"color": "#FF999A", "id": 144, "label": "SDHD protein, human", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 145, "label": "protein TDP-43, human", "shape": "dot", "size": 11.88976377952756}, {"color": "#FFDF6E", "id": 146, "label": "tramiprosate", "shape": "dot", "size": 14.724409448818896}, {"color": "#3DB6A5", "id": 147, "label": "levocarnitine", "shape": "dot", "size": 16.299212598425196}, {"color": "#3DB6A5", "id": 148, "label": "vitamin E", "shape": "dot", "size": 11.88976377952756}, {"color": "#3DB6A5", "id": 149, "label": "adenosine triphosphate", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 150, "label": "ascorbic acid", "shape": "dot", "size": 11.88976377952756}, {"color": "#FF999A", "id": 151, "label": "Immunoglobulins", "shape": "dot", "size": 12.834645669291339}, {"color": "#FF999A", "id": 152, "label": "Cholinesterase, human", "shape": "dot", "size": 14.724409448818896}, {"color": "#FF999A", "id": 153, "label": "Glucosephosphate Dehydrogenase", "shape": "dot", "size": 14.094488188976378}, {"color": "#FF999A", "id": 154, "label": "ADA protein, human", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 155, "label": "ergocalciferol", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 156, "label": "salicylate", "shape": "dot", "size": 13.149606299212598}, {"color": "#FF999A", "id": 157, "label": "Transcription Activator-Like Effector Nucleases", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 158, "label": "Insulin-Like Growth Factor I", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 159, "label": "APP protein, human", "shape": "dot", "size": 13.779527559055119}, {"color": "#FFDF6E", "id": 160, "label": "glucagon, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 161, "label": "Cystic Fibrosis Transmembrane Conductance Regulator", "shape": "dot", "size": 17.244094488188978}, {"color": "#FFDF6E", "id": 162, "label": "ipilimumab", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 163, "label": "tacrine", "shape": "dot", "size": 15.354330708661418}, {"color": "#FF999A", "id": 164, "label": "ApoE protein, human", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 165, "label": "Alpha-glucosidase", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 166, "label": "irinotecan", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 167, "label": "diethanolamine", "shape": "dot", "size": 13.149606299212598}, {"color": "#3DB6A5", "id": 168, "label": "heparin", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 169, "label": "cholic acid", "shape": "dot", "size": 13.46456692913386}, {"color": "#FFDF6E", "id": 170, "label": "pantothenate", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 171, "label": "vardenafil", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 172, "label": "IL6 protein, human", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 173, "label": "Hemoglobin", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 174, "label": "folic acid", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 175, "label": "uridine triacetate", "shape": "dot", "size": 18.503937007874015}, {"color": "#3DB6A5", "id": 176, "label": "D Vitamin", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 177, "label": "methyldopa", "shape": "dot", "size": 15.354330708661418}, {"color": "#FF999A", "id": 178, "label": "Transferrin Receptor", "shape": "dot", "size": 12.519685039370078}, {"color": "#FFDF6E", "id": 179, "label": "beta-alanine", "shape": "dot", "size": 10.94488188976378}, {"color": "#FFDF6E", "id": 180, "label": "lisinopril", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 181, "label": "beta-Globins", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 182, "label": "GUCY2C protein, human", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 183, "label": "TTN protein, human", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 184, "label": "CREBBP protein, human", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 185, "label": "dextromethorphan", "shape": "dot", "size": 12.519685039370078}, {"color": "#3DB6A5", "id": 186, "label": "sildenafil", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 187, "label": "SERPINA1 protein, human", "shape": "dot", "size": 12.519685039370078}, {"color": "#FF999A", "id": 188, "label": "Peplomycin", "shape": "dot", "size": 14.409448818897637}, {"color": "#FF999A", "id": 189, "label": "LEP protein, human", "shape": "dot", "size": 21.338582677165356}, {"color": "#3DB6A5", "id": 190, "label": "fumarate", "shape": "dot", "size": 13.149606299212598}, {"color": "#3DB6A5", "id": 191, "label": "Potassium Drug Class", "shape": "dot", "size": 14.409448818897637}, {"color": "#FFDF6E", "id": 192, "label": "ornithine", "shape": "dot", "size": 10.0}, {"color": "#FFDF6E", "id": 193, "label": "romidepsin", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 194, "label": "BRCA1 protein, human", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 195, "label": "acetone", "shape": "dot", "size": 15.669291338582678}, {"color": "#3DB6A5", "id": 196, "label": "methotrexate", "shape": "dot", "size": 14.094488188976378}, {"color": "#FF999A", "id": 197, "label": "Very low density lipoprotein", "shape": "dot", "size": 21.653543307086615}, {"color": "#3DB6A5", "id": 198, "label": "Potassium supplement", "shape": "dot", "size": 14.409448818897637}, {"color": "#FFDF6E", "id": 199, "label": "nivolumab", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 200, "label": "Sulfonamides", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 201, "label": "dexamethasone", "shape": "dot", "size": 16.614173228346456}, {"color": "#3DB6A5", "id": 202, "label": "genistein", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 203, "label": "orotic acid", "shape": "dot", "size": 13.149606299212598}, {"color": "#FFDF6E", "id": 204, "label": "racemethionine", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 205, "label": "polyethylene glycols", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 206, "label": "Hydrate", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 207, "label": "Butyrylcholinesterase", "shape": "dot", "size": 14.724409448818896}, {"color": "#3DB6A5", "id": 208, "label": "etoposide", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 209, "label": "choline", "shape": "dot", "size": 14.094488188976378}, {"color": "#3DB6A5", "id": 210, "label": "azathioprine", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 211, "label": "cyclophosphamide", "shape": "dot", "size": 12.204724409448819}, {"color": "#3DB6A5", "id": 212, "label": "Zinc Drug Class", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 213, "label": "uracil", "shape": "dot", "size": 14.724409448818896}, {"color": "#FF999A", "id": 214, "label": "ATP8A2 protein, human", "shape": "dot", "size": 15.984251968503937}, {"color": "#3DB6A5", "id": 215, "label": "Obsessive compulsive disorder drugs", "shape": "dot", "size": 13.149606299212598}, {"color": "#FF999A", "id": 216, "label": "T-Cell Surface Glycoprotein CD4, human", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 217, "label": "immunoglobulin A", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 218, "label": "Ethers", "shape": "dot", "size": 15.039370078740157}, {"color": "#FFDF6E", "id": 219, "label": "captopril", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 220, "label": "TCF4 protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 221, "label": "cisplatin", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 222, "label": "Nitric Oxide Synthase", "shape": "dot", "size": 21.023622047244096}, {"color": "#FF999A", "id": 223, "label": "Amyloid beta-Peptides", "shape": "dot", "size": 16.614173228346456}, {"color": "#FF999A", "id": 224, "label": "Protein p53", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 225, "label": "Sulfonamide [EPC]", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 226, "label": "DMD protein, human", "shape": "dot", "size": 22.598425196850393}, {"color": "#FF999A", "id": 227, "label": "ADENOSINE DEAMINASE", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 228, "label": "SNRPF protein, human", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 229, "label": "guanidine", "shape": "dot", "size": 19.133858267716533}, {"color": "#FF999A", "id": 230, "label": "Gamma globulin serum", "shape": "dot", "size": 10.94488188976378}, {"color": "#FFDF6E", "id": 231, "label": "aminolevulinic acid", "shape": "dot", "size": 12.519685039370078}, {"color": "#FF999A", "id": 232, "label": "High Density Lipoproteins", "shape": "dot", "size": 20.078740157480315}, {"color": "#3DB6A5", "id": 233, "label": "dronabinol", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 234, "label": "gamma-Sarcoglycan", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 235, "label": "brain-derived neurotrophic factor", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 236, "label": "Sodium supplements", "shape": "dot", "size": 15.354330708661418}, {"color": "#3DB6A5", "id": 237, "label": "tetanus toxoid vaccine, inactivated", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 238, "label": "inosine", "shape": "dot", "size": 14.094488188976378}, {"color": "#3DB6A5", "id": 239, "label": "VX-661", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 240, "label": "heparin, porcine", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 241, "label": "paclitaxel", "shape": "dot", "size": 12.834645669291339}, {"color": "#FFDF6E", "id": 242, "label": "fibrinogen", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 243, "label": "Superoxides", "shape": "dot", "size": 11.88976377952756}, {"color": "#FFDF6E", "id": 244, "label": "glucagon", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 245, "label": "Glycogen Synthase Kinase 3", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 246, "label": "Blood group antigen KEL 1", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 247, "label": "carbidopa", "shape": "dot", "size": 19.763779527559056}, {"color": "#3DB6A5", "id": 248, "label": "CMT brand of Choline Magnesium Trisalicylate", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 249, "label": "diethylstilbestrol", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 250, "label": "Ribonucleases", "shape": "dot", "size": 13.149606299212598}, {"color": "#3DB6A5", "id": 251, "label": "Steroids", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 252, "label": "Endoglin, human", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 253, "label": "colestipol", "shape": "dot", "size": 17.874015748031496}, {"color": "#FFDF6E", "id": 254, "label": "norcisapride", "shape": "dot", "size": 10.0}, {"color": "#FFDF6E", "id": 255, "label": "gamma-aminobutyric acid", "shape": "dot", "size": 10.94488188976378}, {"color": "#FFDF6E", "id": 256, "label": "Fibrinogen containing hemostatics", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 257, "label": "memantine", "shape": "dot", "size": 13.46456692913386}, {"color": "#FFDF6E", "id": 258, "label": "corticotropin", "shape": "dot", "size": 12.519685039370078}, {"color": "#FFDF6E", "id": 259, "label": "carnitine", "shape": "dot", "size": 16.299212598425196}, {"color": "#FF999A", "id": 260, "label": "Histone Deacetylase", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 261, "label": "carbene", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 262, "label": "tadalafil", "shape": "dot", "size": 11.259842519685039}, {"color": "#3DB6A5", "id": 263, "label": "Imidazoles", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 264, "label": "Pancreatic ribonuclease", "shape": "dot", "size": 13.149606299212598}, {"color": "#FF999A", "id": 265, "label": "Phosphorylases", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 266, "label": "Throat Homeopathic Medication", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 267, "label": "MPO protein, human", "shape": "dot", "size": 11.5748031496063}, {"color": "#3DB6A5", "id": 268, "label": "Sulfonamide Anti-Infective Agents", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 269, "label": "topotecan", "shape": "dot", "size": 13.46456692913386}, {"color": "#FF999A", "id": 270, "label": "NADH dehydrogenase (ubiquinone)", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 271, "label": "glutamate", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 272, "label": "Human Follicle-Stimulating Hormone", "shape": "dot", "size": 13.149606299212598}, {"color": "#FF999A", "id": 273, "label": "Tetrahydrobiopterin", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 274, "label": "hepatitis A vaccine, inactivated", "shape": "dot", "size": 12.519685039370078}, {"color": "#FF999A", "id": 275, "label": "SLA protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 276, "label": "Cellular Nucleic Acid-Binding Protein", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 277, "label": "intramuscular immunoglobulin", "shape": "dot", "size": 10.94488188976378}, {"color": "#3DB6A5", "id": 278, "label": "Vitamin C Drug Class", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 279, "label": "PTEN protein, human", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 280, "label": "IGF1 protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 281, "label": "propionic acid", "shape": "dot", "size": 14.094488188976378}, {"color": "#3DB6A5", "id": 282, "label": "aspirin", "shape": "dot", "size": 10.0}, {"color": "#3DB6A5", "id": 283, "label": "Hydroxymethylglutaryl-CoA Reductase Inhibitors", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 284, "label": "SNCG protein, human", "shape": "dot", "size": 10.62992125984252}, {"color": "#3DB6A5", "id": 285, "label": "glucosamine", "shape": "dot", "size": 12.519685039370078}, {"color": "#3DB6A5", "id": 286, "label": "cladribine", "shape": "dot", "size": 13.149606299212598}, {"color": "#FFDF6E", "id": 287, "label": "dactinomycin", "shape": "dot", "size": 22.913385826771652}, {"color": "#FF999A", "id": 288, "label": "F2 protein, human", "shape": "dot", "size": 14.724409448818896}, {"color": "#FF999A", "id": 289, "label": "AKR1B1 protein, human", "shape": "dot", "size": 21.338582677165356}, {"color": "#FF999A", "id": 290, "label": "creatine", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 291, "label": "BCAR1 protein, human", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 292, "label": "G6PD protein, human", "shape": "dot", "size": 13.779527559055119}, {"color": "#FF999A", "id": 293, "label": "MLH1 protein, human", "shape": "dot", "size": 10.0}, {"color": "#3DB6A5", "id": 294, "label": "haloperidol", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 295, "label": "Interleukin-1", "shape": "dot", "size": 10.0}, {"color": "#FFDF6E", "id": 296, "label": "sargramostim", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 297, "label": "IDUA protein, human", "shape": "dot", "size": 12.834645669291339}, {"color": "#3DB6A5", "id": 298, "label": "cephalothin", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 299, "label": "fludarabine", "shape": "dot", "size": 15.984251968503937}, {"color": "#3DB6A5", "id": 300, "label": "tromethamine", "shape": "dot", "size": 14.094488188976378}, {"color": "#3DB6A5", "id": 301, "label": "methylene chloride", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 302, "label": "Vitamin C [EPC]", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 303, "label": "follicle stimulating hormone", "shape": "dot", "size": 13.149606299212598}, {"color": "#3DB6A5", "id": 304, "label": "lamotrigine", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 305, "label": "tetracycline", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 306, "label": "Pancreatic Hormones", "shape": "dot", "size": 13.149606299212598}, {"color": "#3DB6A5", "id": 307, "label": "2,4-thiazolidinedione", "shape": "dot", "size": 11.88976377952756}, {"color": "#FF999A", "id": 308, "label": "Heat-Shock Proteins 70", "shape": "dot", "size": 10.62992125984252}, {"color": "#FF999A", "id": 309, "label": "NOS2A protein, human", "shape": "dot", "size": 21.023622047244096}, {"color": "#FF999A", "id": 310, "label": "RB1 protein, human", "shape": "dot", "size": 11.88976377952756}, {"color": "#3DB6A5", "id": 311, "label": "ethyl acetate", "shape": "dot", "size": 11.259842519685039}, {"color": "#FFDF6E", "id": 312, "label": "glutathione", "shape": "dot", "size": 10.0}, {"color": "#FFDF6E", "id": 313, "label": "Cycloleucine", "shape": "dot", "size": 14.724409448818896}, {"color": "#FF999A", "id": 314, "label": "Blood group antigen E", "shape": "dot", "size": 10.0}, {"color": "#3DB6A5", "id": 315, "label": "Riboflavin Drug Class", "shape": "dot", "size": 10.31496062992126}, {"color": "#3DB6A5", "id": 316, "label": "dopamine", "shape": "dot", "size": 10.94488188976378}, {"color": "#FF999A", "id": 317, "label": "Glycoside Hydrolases", "shape": "dot", "size": 13.779527559055119}, {"color": "#3DB6A5", "id": 318, "label": "indole", "shape": "dot", "size": 10.0}, {"color": "#FF999A", "id": 319, "label": "TP53 protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 320, "label": "Immunoglobulin IgG4", "shape": "dot", "size": 11.259842519685039}, {"color": "#FF999A", "id": 321, "label": "INSR protein, human", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 322, "label": "interleukin-6", "shape": "dot", "size": 12.519685039370078}, {"color": "#FF999A", "id": 323, "label": "Recombinant Corticotropin", "shape": "dot", "size": 12.204724409448819}, {"color": "#FF999A", "id": 324, "label": "Mg antigen", "shape": "dot", "size": 13.46456692913386}, {"color": "#FFDF6E", "id": 325, "label": "factor IX", "shape": "dot", "size": 10.31496062992126}, {"color": "#FF999A", "id": 326, "label": "VCP protein, human", "shape": "dot", "size": 14.094488188976378}, {"color": "#3DB6A5", "id": 327, "label": "nitric oxide", "shape": "dot", "size": 50.0}]);
+edges = new vis.DataSet([{"from": 22, "to": 327}, {"from": 249, "to": 327}, {"from": 54, "to": 249}, {"from": 226, "to": 249}, {"from": 183, "to": 249}, {"from": 222, "to": 327}, {"from": 54, "to": 327}, {"from": 309, "to": 327}, {"from": 226, "to": 327}, {"from": 37, "to": 321}, {"from": 222, "to": 309}, {"from": 222, "to": 226}, {"from": 183, "to": 222}, {"from": 54, "to": 226}, {"from": 226, "to": 309}, {"from": 183, "to": 309}, {"from": 183, "to": 226}, {"from": 185, "to": 201}, {"from": 201, "to": 206}, {"from": 130, "to": 327}, {"from": 68, "to": 236}, {"from": 233, "to": 247}, {"from": 15, "to": 233}, {"from": 247, "to": 304}, {"from": 15, "to": 247}, {"from": 191, "to": 198}, {"from": 252, "to": 327}, {"from": 252, "to": 309}, {"from": 222, "to": 252}, {"from": 135, "to": 307}, {"from": 18, "to": 307}, {"from": 109, "to": 307}, {"from": 189, "to": 307}, {"from": 43, "to": 263}, {"from": 43, "to": 109}, {"from": 43, "to": 189}, {"from": 18, "to": 135}, {"from": 109, "to": 135}, {"from": 135, "to": 189}, {"from": 109, "to": 263}, {"from": 189, "to": 263}, {"from": 18, "to": 109}, {"from": 18, "to": 189}, {"from": 109, "to": 189}, {"from": 45, "to": 327}, {"from": 115, "to": 327}, {"from": 45, "to": 115}, {"from": 77, "to": 140}, {"from": 77, "to": 327}, {"from": 140, "to": 327}, {"from": 81, "to": 327}, {"from": 214, "to": 327}, {"from": 81, "to": 214}, {"from": 44, "to": 327}, {"from": 289, "to": 327}, {"from": 44, "to": 81}, {"from": 44, "to": 289}, {"from": 81, "to": 289}, {"from": 57, "to": 327}, {"from": 275, "to": 327}, {"from": 112, "to": 175}, {"from": 130, "to": 179}, {"from": 74, "to": 327}, {"from": 94, "to": 212}, {"from": 291, "to": 327}, {"from": 100, "to": 327}, {"from": 313, "to": 327}, {"from": 100, "to": 313}, {"from": 100, "to": 261}, {"from": 103, "to": 305}, {"from": 76, "to": 327}, {"from": 130, "to": 201}, {"from": 117, "to": 130}, {"from": 120, "to": 130}, {"from": 130, "to": 299}, {"from": 72, "to": 130}, {"from": 130, "to": 222}, {"from": 130, "to": 309}, {"from": 117, "to": 201}, {"from": 120, "to": 201}, {"from": 201, "to": 299}, {"from": 72, "to": 201}, {"from": 201, "to": 327}, {"from": 201, "to": 258}, {"from": 201, "to": 222}, {"from": 201, "to": 309}, {"from": 201, "to": 323}, {"from": 70, "to": 201}, {"from": 117, "to": 120}, {"from": 117, "to": 299}, {"from": 72, "to": 117}, {"from": 117, "to": 327}, {"from": 117, "to": 258}, {"from": 117, "to": 222}, {"from": 117, "to": 309}, {"from": 117, "to": 323}, {"from": 70, "to": 117}, {"from": 120, "to": 299}, {"from": 72, "to": 120}, {"from": 120, "to": 327}, {"from": 120, "to": 258}, {"from": 120, "to": 222}, {"from": 120, "to": 309}, {"from": 120, "to": 323}, {"from": 70, "to": 120}, {"from": 72, "to": 299}, {"from": 299, "to": 327}, {"from": 258, "to": 299}, {"from": 222, "to": 299}, {"from": 299, "to": 309}, {"from": 299, "to": 323}, {"from": 70, "to": 299}, {"from": 72, "to": 327}, {"from": 72, "to": 222}, {"from": 72, "to": 309}, {"from": 258, "to": 327}, {"from": 323, "to": 327}, {"from": 70, "to": 327}, {"from": 258, "to": 323}, {"from": 70, "to": 258}, {"from": 70, "to": 323}, {"from": 62, "to": 327}, {"from": 82, "to": 327}, {"from": 82, "to": 220}, {"from": 62, "to": 289}, {"from": 130, "to": 246}, {"from": 246, "to": 327}, {"from": 158, "to": 280}, {"from": 54, "to": 130}, {"from": 130, "to": 226}, {"from": 112, "to": 327}, {"from": 47, "to": 126}, {"from": 126, "to": 136}, {"from": 126, "to": 218}, {"from": 47, "to": 136}, {"from": 47, "to": 218}, {"from": 136, "to": 218}, {"from": 213, "to": 327}, {"from": 137, "to": 213}, {"from": 8, "to": 191}, {"from": 8, "to": 198}, {"from": 191, "to": 327}, {"from": 198, "to": 327}, {"from": 137, "to": 327}, {"from": 14, "to": 327}, {"from": 178, "to": 327}, {"from": 14, "to": 137}, {"from": 137, "to": 178}, {"from": 14, "to": 178}, {"from": 264, "to": 327}, {"from": 5, "to": 327}, {"from": 250, "to": 327}, {"from": 222, "to": 264}, {"from": 264, "to": 309}, {"from": 5, "to": 264}, {"from": 250, "to": 264}, {"from": 5, "to": 222}, {"from": 222, "to": 250}, {"from": 5, "to": 309}, {"from": 250, "to": 309}, {"from": 5, "to": 250}, {"from": 60, "to": 126}, {"from": 108, "to": 126}, {"from": 126, "to": 229}, {"from": 126, "to": 133}, {"from": 77, "to": 126}, {"from": 52, "to": 126}, {"from": 126, "to": 253}, {"from": 126, "to": 140}, {"from": 56, "to": 126}, {"from": 109, "to": 126}, {"from": 126, "to": 189}, {"from": 126, "to": 232}, {"from": 126, "to": 197}, {"from": 61, "to": 80}, {"from": 80, "to": 229}, {"from": 80, "to": 300}, {"from": 77, "to": 80}, {"from": 52, "to": 80}, {"from": 80, "to": 140}, {"from": 56, "to": 80}, {"from": 80, "to": 109}, {"from": 80, "to": 189}, {"from": 80, "to": 232}, {"from": 80, "to": 197}, {"from": 60, "to": 108}, {"from": 47, "to": 60}, {"from": 60, "to": 229}, {"from": 60, "to": 133}, {"from": 60, "to": 77}, {"from": 52, "to": 60}, {"from": 60, "to": 136}, {"from": 60, "to": 253}, {"from": 60, "to": 140}, {"from": 56, "to": 60}, {"from": 60, "to": 218}, {"from": 60, "to": 109}, {"from": 60, "to": 189}, {"from": 60, "to": 232}, {"from": 60, "to": 197}, {"from": 61, "to": 77}, {"from": 61, "to": 140}, {"from": 47, "to": 108}, {"from": 108, "to": 229}, {"from": 108, "to": 133}, {"from": 77, "to": 108}, {"from": 52, "to": 108}, {"from": 108, "to": 136}, {"from": 108, "to": 253}, {"from": 108, "to": 140}, {"from": 56, "to": 108}, {"from": 108, "to": 218}, {"from": 108, "to": 109}, {"from": 108, "to": 189}, {"from": 108, "to": 232}, {"from": 108, "to": 197}, {"from": 47, "to": 229}, {"from": 47, "to": 133}, {"from": 47, "to": 77}, {"from": 47, "to": 52}, {"from": 47, "to": 253}, {"from": 47, "to": 140}, {"from": 47, "to": 56}, {"from": 47, "to": 109}, {"from": 47, "to": 189}, {"from": 47, "to": 232}, {"from": 47, "to": 197}, {"from": 229, "to": 300}, {"from": 133, "to": 229}, {"from": 77, "to": 229}, {"from": 52, "to": 229}, {"from": 136, "to": 229}, {"from": 229, "to": 253}, {"from": 140, "to": 229}, {"from": 56, "to": 229}, {"from": 218, "to": 229}, {"from": 109, "to": 229}, {"from": 189, "to": 229}, {"from": 229, "to": 232}, {"from": 197, "to": 229}, {"from": 52, "to": 300}, {"from": 56, "to": 300}, {"from": 109, "to": 300}, {"from": 189, "to": 300}, {"from": 232, "to": 300}, {"from": 197, "to": 300}, {"from": 77, "to": 133}, {"from": 52, "to": 133}, {"from": 133, "to": 136}, {"from": 133, "to": 253}, {"from": 133, "to": 140}, {"from": 56, "to": 133}, {"from": 133, "to": 218}, {"from": 109, "to": 133}, {"from": 133, "to": 189}, {"from": 133, "to": 232}, {"from": 133, "to": 197}, {"from": 52, "to": 77}, {"from": 77, "to": 136}, {"from": 77, "to": 253}, {"from": 56, "to": 77}, {"from": 77, "to": 218}, {"from": 77, "to": 109}, {"from": 77, "to": 189}, {"from": 77, "to": 232}, {"from": 77, "to": 197}, {"from": 52, "to": 136}, {"from": 52, "to": 253}, {"from": 52, "to": 140}, {"from": 52, "to": 56}, {"from": 52, "to": 218}, {"from": 52, "to": 109}, {"from": 52, "to": 189}, {"from": 52, "to": 232}, {"from": 52, "to": 197}, {"from": 136, "to": 253}, {"from": 136, "to": 140}, {"from": 56, "to": 136}, {"from": 109, "to": 136}, {"from": 136, "to": 189}, {"from": 136, "to": 232}, {"from": 136, "to": 197}, {"from": 140, "to": 253}, {"from": 56, "to": 253}, {"from": 218, "to": 253}, {"from": 109, "to": 253}, {"from": 189, "to": 253}, {"from": 232, "to": 253}, {"from": 197, "to": 253}, {"from": 56, "to": 140}, {"from": 140, "to": 218}, {"from": 109, "to": 140}, {"from": 140, "to": 189}, {"from": 140, "to": 232}, {"from": 140, "to": 197}, {"from": 56, "to": 218}, {"from": 56, "to": 109}, {"from": 56, "to": 189}, {"from": 56, "to": 232}, {"from": 56, "to": 197}, {"from": 109, "to": 218}, {"from": 189, "to": 218}, {"from": 218, "to": 232}, {"from": 197, "to": 218}, {"from": 109, "to": 232}, {"from": 109, "to": 197}, {"from": 189, "to": 232}, {"from": 189, "to": 197}, {"from": 197, "to": 232}, {"from": 21, "to": 175}, {"from": 21, "to": 112}, {"from": 16, "to": 327}, {"from": 16, "to": 222}, {"from": 62, "to": 222}, {"from": 16, "to": 309}, {"from": 62, "to": 309}, {"from": 191, "to": 236}, {"from": 198, "to": 236}, {"from": 236, "to": 327}, {"from": 68, "to": 191}, {"from": 86, "to": 327}, {"from": 68, "to": 198}, {"from": 68, "to": 327}, {"from": 12, "to": 112}, {"from": 212, "to": 327}, {"from": 212, "to": 222}, {"from": 212, "to": 309}, {"from": 94, "to": 327}, {"from": 94, "to": 222}, {"from": 94, "to": 309}, {"from": 21, "to": 327}, {"from": 21, "to": 222}, {"from": 21, "to": 309}, {"from": 200, "to": 225}, {"from": 200, "to": 268}, {"from": 77, "to": 100}, {"from": 57, "to": 119}, {"from": 100, "to": 119}, {"from": 225, "to": 268}, {"from": 100, "to": 140}, {"from": 57, "to": 100}, {"from": 57, "to": 252}, {"from": 298, "to": 327}, {"from": 185, "to": 226}, {"from": 185, "to": 228}, {"from": 201, "to": 226}, {"from": 201, "to": 228}, {"from": 226, "to": 228}, {"from": 83, "to": 100}, {"from": 29, "to": 83}, {"from": 29, "to": 100}, {"from": 159, "to": 327}, {"from": 31, "to": 327}, {"from": 10, "to": 327}, {"from": 31, "to": 159}, {"from": 10, "to": 159}, {"from": 10, "to": 31}, {"from": 101, "to": 165}, {"from": 178, "to": 264}, {"from": 14, "to": 264}, {"from": 137, "to": 264}, {"from": 45, "to": 264}, {"from": 115, "to": 264}, {"from": 45, "to": 178}, {"from": 115, "to": 178}, {"from": 5, "to": 178}, {"from": 178, "to": 250}, {"from": 14, "to": 45}, {"from": 14, "to": 115}, {"from": 5, "to": 14}, {"from": 14, "to": 250}, {"from": 45, "to": 137}, {"from": 115, "to": 137}, {"from": 5, "to": 137}, {"from": 137, "to": 250}, {"from": 5, "to": 45}, {"from": 45, "to": 250}, {"from": 5, "to": 115}, {"from": 115, "to": 250}, {"from": 41, "to": 132}, {"from": 127, "to": 176}, {"from": 127, "to": 155}, {"from": 155, "to": 176}, {"from": 185, "to": 247}, {"from": 185, "to": 287}, {"from": 201, "to": 247}, {"from": 247, "to": 287}, {"from": 15, "to": 287}, {"from": 30, "to": 75}, {"from": 79, "to": 143}, {"from": 143, "to": 257}, {"from": 25, "to": 143}, {"from": 143, "to": 151}, {"from": 79, "to": 257}, {"from": 25, "to": 79}, {"from": 79, "to": 151}, {"from": 25, "to": 257}, {"from": 151, "to": 257}, {"from": 25, "to": 151}, {"from": 171, "to": 262}, {"from": 171, "to": 186}, {"from": 186, "to": 262}, {"from": 228, "to": 327}, {"from": 78, "to": 89}, {"from": 38, "to": 289}, {"from": 100, "to": 289}, {"from": 83, "to": 310}, {"from": 29, "to": 310}, {"from": 23, "to": 216}, {"from": 40, "to": 130}, {"from": 111, "to": 130}, {"from": 179, "to": 204}, {"from": 118, "to": 179}, {"from": 130, "to": 204}, {"from": 130, "to": 229}, {"from": 118, "to": 130}, {"from": 130, "to": 255}, {"from": 204, "to": 229}, {"from": 118, "to": 229}, {"from": 175, "to": 327}, {"from": 112, "to": 130}, {"from": 112, "to": 226}, {"from": 97, "to": 226}, {"from": 3, "to": 226}, {"from": 3, "to": 97}, {"from": 38, "to": 102}, {"from": 129, "to": 278}, {"from": 129, "to": 302}, {"from": 129, "to": 148}, {"from": 129, "to": 150}, {"from": 278, "to": 302}, {"from": 148, "to": 278}, {"from": 150, "to": 278}, {"from": 148, "to": 302}, {"from": 150, "to": 302}, {"from": 148, "to": 150}, {"from": 228, "to": 308}, {"from": 107, "to": 308}, {"from": 242, "to": 256}, {"from": 112, "to": 145}, {"from": 107, "to": 228}, {"from": 137, "to": 309}, {"from": 137, "to": 222}, {"from": 86, "to": 190}, {"from": 156, "to": 190}, {"from": 57, "to": 190}, {"from": 190, "to": 203}, {"from": 119, "to": 190}, {"from": 190, "to": 213}, {"from": 169, "to": 190}, {"from": 190, "to": 327}, {"from": 100, "to": 190}, {"from": 190, "to": 313}, {"from": 86, "to": 156}, {"from": 57, "to": 86}, {"from": 86, "to": 203}, {"from": 86, "to": 119}, {"from": 86, "to": 213}, {"from": 86, "to": 169}, {"from": 86, "to": 100}, {"from": 86, "to": 313}, {"from": 57, "to": 156}, {"from": 156, "to": 203}, {"from": 119, "to": 156}, {"from": 156, "to": 213}, {"from": 156, "to": 169}, {"from": 156, "to": 327}, {"from": 100, "to": 156}, {"from": 156, "to": 313}, {"from": 57, "to": 203}, {"from": 57, "to": 213}, {"from": 57, "to": 169}, {"from": 57, "to": 313}, {"from": 119, "to": 203}, {"from": 203, "to": 213}, {"from": 169, "to": 203}, {"from": 203, "to": 327}, {"from": 100, "to": 203}, {"from": 203, "to": 313}, {"from": 119, "to": 213}, {"from": 119, "to": 169}, {"from": 119, "to": 327}, {"from": 119, "to": 313}, {"from": 169, "to": 213}, {"from": 100, "to": 213}, {"from": 213, "to": 313}, {"from": 169, "to": 327}, {"from": 100, "to": 169}, {"from": 169, "to": 313}, {"from": 211, "to": 286}, {"from": 211, "to": 287}, {"from": 119, "to": 287}, {"from": 286, "to": 287}, {"from": 77, "to": 85}, {"from": 55, "to": 77}, {"from": 50, "to": 77}, {"from": 77, "to": 289}, {"from": 52, "to": 85}, {"from": 52, "to": 55}, {"from": 50, "to": 52}, {"from": 52, "to": 289}, {"from": 60, "to": 85}, {"from": 55, "to": 60}, {"from": 50, "to": 60}, {"from": 60, "to": 289}, {"from": 85, "to": 253}, {"from": 55, "to": 253}, {"from": 50, "to": 253}, {"from": 253, "to": 289}, {"from": 55, "to": 85}, {"from": 56, "to": 85}, {"from": 85, "to": 189}, {"from": 85, "to": 109}, {"from": 50, "to": 85}, {"from": 85, "to": 289}, {"from": 55, "to": 56}, {"from": 55, "to": 189}, {"from": 55, "to": 109}, {"from": 50, "to": 55}, {"from": 55, "to": 289}, {"from": 50, "to": 56}, {"from": 56, "to": 289}, {"from": 50, "to": 189}, {"from": 189, "to": 289}, {"from": 50, "to": 109}, {"from": 109, "to": 289}, {"from": 50, "to": 289}, {"from": 142, "to": 327}, {"from": 105, "to": 222}, {"from": 187, "to": 222}, {"from": 122, "to": 222}, {"from": 105, "to": 309}, {"from": 105, "to": 187}, {"from": 105, "to": 279}, {"from": 105, "to": 122}, {"from": 187, "to": 309}, {"from": 122, "to": 309}, {"from": 187, "to": 279}, {"from": 122, "to": 187}, {"from": 122, "to": 279}, {"from": 130, "to": 303}, {"from": 130, "to": 272}, {"from": 303, "to": 327}, {"from": 272, "to": 327}, {"from": 54, "to": 303}, {"from": 226, "to": 303}, {"from": 272, "to": 303}, {"from": 54, "to": 272}, {"from": 226, "to": 272}, {"from": 237, "to": 287}, {"from": 46, "to": 237}, {"from": 2, "to": 49}, {"from": 2, "to": 63}, {"from": 7, "to": 27}, {"from": 19, "to": 128}, {"from": 19, "to": 228}, {"from": 19, "to": 272}, {"from": 19, "to": 289}, {"from": 19, "to": 303}, {"from": 46, "to": 287}, {"from": 151, "to": 287}, {"from": 287, "to": 306}, {"from": 128, "to": 142}, {"from": 74, "to": 128}, {"from": 95, "to": 128}, {"from": 105, "to": 128}, {"from": 128, "to": 153}, {"from": 128, "to": 154}, {"from": 128, "to": 227}, {"from": 128, "to": 272}, {"from": 128, "to": 289}, {"from": 128, "to": 303}, {"from": 42, "to": 69}, {"from": 296, "to": 306}, {"from": 49, "to": 63}, {"from": 74, "to": 142}, {"from": 105, "to": 142}, {"from": 142, "to": 153}, {"from": 74, "to": 105}, {"from": 73, "to": 231}, {"from": 105, "to": 231}, {"from": 231, "to": 258}, {"from": 231, "to": 273}, {"from": 231, "to": 310}, {"from": 93, "to": 172}, {"from": 93, "to": 322}, {"from": 105, "to": 153}, {"from": 105, "to": 154}, {"from": 105, "to": 227}, {"from": 105, "to": 235}, {"from": 105, "to": 273}, {"from": 105, "to": 310}, {"from": 121, "to": 245}, {"from": 151, "to": 289}, {"from": 153, "to": 187}, {"from": 154, "to": 227}, {"from": 172, "to": 322}, {"from": 228, "to": 272}, {"from": 228, "to": 303}, {"from": 245, "to": 322}, {"from": 272, "to": 289}, {"from": 273, "to": 310}, {"from": 289, "to": 303}, {"from": 39, "to": 326}, {"from": 205, "to": 327}, {"from": 137, "to": 205}, {"from": 45, "to": 205}, {"from": 115, "to": 205}, {"from": 213, "to": 309}, {"from": 213, "to": 222}, {"from": 52, "to": 327}, {"from": 105, "to": 327}, {"from": 187, "to": 327}, {"from": 122, "to": 327}, {"from": 153, "to": 292}, {"from": 105, "to": 292}, {"from": 105, "to": 226}, {"from": 187, "to": 226}, {"from": 122, "to": 226}, {"from": 6, "to": 259}, {"from": 147, "to": 259}, {"from": 65, "to": 259}, {"from": 259, "to": 327}, {"from": 101, "to": 259}, {"from": 259, "to": 265}, {"from": 99, "to": 259}, {"from": 165, "to": 259}, {"from": 226, "to": 259}, {"from": 32, "to": 259}, {"from": 259, "to": 326}, {"from": 123, "to": 259}, {"from": 6, "to": 147}, {"from": 6, "to": 65}, {"from": 6, "to": 327}, {"from": 6, "to": 101}, {"from": 6, "to": 265}, {"from": 6, "to": 99}, {"from": 6, "to": 165}, {"from": 6, "to": 226}, {"from": 6, "to": 32}, {"from": 6, "to": 326}, {"from": 6, "to": 123}, {"from": 65, "to": 147}, {"from": 147, "to": 327}, {"from": 101, "to": 147}, {"from": 147, "to": 265}, {"from": 99, "to": 147}, {"from": 147, "to": 165}, {"from": 147, "to": 226}, {"from": 32, "to": 147}, {"from": 147, "to": 326}, {"from": 123, "to": 147}, {"from": 65, "to": 327}, {"from": 65, "to": 101}, {"from": 65, "to": 265}, {"from": 65, "to": 99}, {"from": 65, "to": 165}, {"from": 65, "to": 226}, {"from": 32, "to": 65}, {"from": 65, "to": 326}, {"from": 65, "to": 123}, {"from": 101, "to": 327}, {"from": 265, "to": 327}, {"from": 99, "to": 327}, {"from": 165, "to": 327}, {"from": 32, "to": 327}, {"from": 326, "to": 327}, {"from": 123, "to": 327}, {"from": 101, "to": 265}, {"from": 99, "to": 101}, {"from": 101, "to": 226}, {"from": 32, "to": 101}, {"from": 101, "to": 326}, {"from": 101, "to": 123}, {"from": 99, "to": 265}, {"from": 165, "to": 265}, {"from": 226, "to": 265}, {"from": 32, "to": 265}, {"from": 265, "to": 326}, {"from": 123, "to": 265}, {"from": 99, "to": 165}, {"from": 99, "to": 226}, {"from": 32, "to": 99}, {"from": 99, "to": 326}, {"from": 99, "to": 123}, {"from": 165, "to": 226}, {"from": 32, "to": 165}, {"from": 165, "to": 326}, {"from": 123, "to": 165}, {"from": 32, "to": 226}, {"from": 226, "to": 326}, {"from": 123, "to": 226}, {"from": 32, "to": 326}, {"from": 32, "to": 123}, {"from": 123, "to": 326}, {"from": 77, "to": 195}, {"from": 52, "to": 195}, {"from": 195, "to": 253}, {"from": 85, "to": 195}, {"from": 55, "to": 195}, {"from": 56, "to": 195}, {"from": 109, "to": 195}, {"from": 189, "to": 195}, {"from": 50, "to": 195}, {"from": 195, "to": 197}, {"from": 195, "to": 289}, {"from": 85, "to": 197}, {"from": 55, "to": 197}, {"from": 50, "to": 197}, {"from": 197, "to": 289}, {"from": 276, "to": 289}, {"from": 168, "to": 240}, {"from": 168, "to": 327}, {"from": 240, "to": 327}, {"from": 205, "to": 213}, {"from": 128, "to": 213}, {"from": 57, "to": 205}, {"from": 57, "to": 128}, {"from": 71, "to": 169}, {"from": 57, "to": 71}, {"from": 41, "to": 68}, {"from": 41, "to": 236}, {"from": 41, "to": 191}, {"from": 41, "to": 198}, {"from": 68, "to": 132}, {"from": 132, "to": 236}, {"from": 132, "to": 191}, {"from": 132, "to": 198}, {"from": 57, "to": 191}, {"from": 57, "to": 198}, {"from": 143, "to": 247}, {"from": 139, "to": 247}, {"from": 104, "to": 247}, {"from": 175, "to": 247}, {"from": 79, "to": 247}, {"from": 163, "to": 247}, {"from": 152, "to": 247}, {"from": 223, "to": 247}, {"from": 116, "to": 247}, {"from": 207, "to": 247}, {"from": 112, "to": 247}, {"from": 12, "to": 247}, {"from": 15, "to": 143}, {"from": 15, "to": 139}, {"from": 15, "to": 104}, {"from": 15, "to": 175}, {"from": 15, "to": 79}, {"from": 15, "to": 163}, {"from": 15, "to": 152}, {"from": 15, "to": 223}, {"from": 15, "to": 116}, {"from": 15, "to": 207}, {"from": 15, "to": 112}, {"from": 12, "to": 15}, {"from": 143, "to": 287}, {"from": 139, "to": 143}, {"from": 104, "to": 143}, {"from": 143, "to": 175}, {"from": 143, "to": 163}, {"from": 143, "to": 152}, {"from": 143, "to": 223}, {"from": 116, "to": 143}, {"from": 143, "to": 207}, {"from": 112, "to": 143}, {"from": 12, "to": 143}, {"from": 139, "to": 287}, {"from": 104, "to": 287}, {"from": 175, "to": 287}, {"from": 79, "to": 287}, {"from": 163, "to": 287}, {"from": 152, "to": 287}, {"from": 223, "to": 287}, {"from": 116, "to": 287}, {"from": 207, "to": 287}, {"from": 112, "to": 287}, {"from": 12, "to": 287}, {"from": 104, "to": 139}, {"from": 139, "to": 175}, {"from": 79, "to": 139}, {"from": 139, "to": 163}, {"from": 139, "to": 152}, {"from": 139, "to": 223}, {"from": 116, "to": 139}, {"from": 139, "to": 207}, {"from": 112, "to": 139}, {"from": 12, "to": 139}, {"from": 104, "to": 175}, {"from": 79, "to": 104}, {"from": 104, "to": 163}, {"from": 104, "to": 152}, {"from": 104, "to": 223}, {"from": 104, "to": 116}, {"from": 104, "to": 207}, {"from": 104, "to": 112}, {"from": 12, "to": 104}, {"from": 79, "to": 175}, {"from": 163, "to": 175}, {"from": 152, "to": 175}, {"from": 175, "to": 223}, {"from": 116, "to": 175}, {"from": 175, "to": 207}, {"from": 12, "to": 175}, {"from": 79, "to": 163}, {"from": 79, "to": 152}, {"from": 79, "to": 223}, {"from": 79, "to": 116}, {"from": 79, "to": 207}, {"from": 79, "to": 112}, {"from": 12, "to": 79}, {"from": 152, "to": 163}, {"from": 163, "to": 223}, {"from": 116, "to": 163}, {"from": 163, "to": 207}, {"from": 112, "to": 163}, {"from": 12, "to": 163}, {"from": 152, "to": 223}, {"from": 116, "to": 152}, {"from": 152, "to": 207}, {"from": 112, "to": 152}, {"from": 12, "to": 152}, {"from": 116, "to": 223}, {"from": 207, "to": 223}, {"from": 112, "to": 223}, {"from": 12, "to": 223}, {"from": 116, "to": 207}, {"from": 112, "to": 116}, {"from": 12, "to": 116}, {"from": 112, "to": 207}, {"from": 12, "to": 207}, {"from": 157, "to": 212}, {"from": 94, "to": 157}, {"from": 157, "to": 327}, {"from": 92, "to": 287}, {"from": 222, "to": 287}, {"from": 287, "to": 309}, {"from": 15, "to": 92}, {"from": 92, "to": 247}, {"from": 92, "to": 222}, {"from": 92, "to": 309}, {"from": 92, "to": 112}, {"from": 112, "to": 222}, {"from": 112, "to": 309}, {"from": 276, "to": 327}, {"from": 60, "to": 195}, {"from": 60, "to": 281}, {"from": 85, "to": 140}, {"from": 108, "to": 195}, {"from": 55, "to": 108}, {"from": 133, "to": 195}, {"from": 195, "to": 281}, {"from": 140, "to": 195}, {"from": 195, "to": 232}, {"from": 229, "to": 281}, {"from": 133, "to": 281}, {"from": 77, "to": 281}, {"from": 52, "to": 281}, {"from": 253, "to": 281}, {"from": 140, "to": 281}, {"from": 56, "to": 281}, {"from": 109, "to": 281}, {"from": 189, "to": 281}, {"from": 232, "to": 281}, {"from": 197, "to": 281}, {"from": 55, "to": 140}, {"from": 145, "to": 170}, {"from": 284, "to": 313}, {"from": 64, "to": 247}, {"from": 247, "to": 257}, {"from": 15, "to": 257}, {"from": 64, "to": 143}, {"from": 257, "to": 287}, {"from": 100, "to": 287}, {"from": 100, "to": 104}, {"from": 64, "to": 175}, {"from": 64, "to": 79}, {"from": 64, "to": 257}, {"from": 64, "to": 163}, {"from": 64, "to": 112}, {"from": 175, "to": 257}, {"from": 163, "to": 257}, {"from": 112, "to": 257}, {"from": 83, "to": 327}, {"from": 83, "to": 228}, {"from": 287, "to": 327}, {"from": 0, "to": 286}, {"from": 0, "to": 241}, {"from": 0, "to": 269}, {"from": 0, "to": 196}, {"from": 0, "to": 58}, {"from": 0, "to": 48}, {"from": 0, "to": 299}, {"from": 0, "to": 166}, {"from": 221, "to": 287}, {"from": 221, "to": 269}, {"from": 196, "to": 221}, {"from": 48, "to": 221}, {"from": 166, "to": 221}, {"from": 208, "to": 221}, {"from": 211, "to": 221}, {"from": 241, "to": 286}, {"from": 269, "to": 286}, {"from": 196, "to": 286}, {"from": 58, "to": 286}, {"from": 48, "to": 286}, {"from": 286, "to": 299}, {"from": 166, "to": 286}, {"from": 67, "to": 287}, {"from": 241, "to": 287}, {"from": 269, "to": 287}, {"from": 196, "to": 287}, {"from": 48, "to": 287}, {"from": 166, "to": 287}, {"from": 208, "to": 287}, {"from": 241, "to": 269}, {"from": 196, "to": 241}, {"from": 58, "to": 241}, {"from": 48, "to": 241}, {"from": 241, "to": 299}, {"from": 166, "to": 241}, {"from": 196, "to": 269}, {"from": 58, "to": 269}, {"from": 48, "to": 269}, {"from": 269, "to": 299}, {"from": 166, "to": 269}, {"from": 208, "to": 269}, {"from": 58, "to": 196}, {"from": 48, "to": 196}, {"from": 196, "to": 299}, {"from": 166, "to": 196}, {"from": 196, "to": 208}, {"from": 196, "to": 211}, {"from": 48, "to": 58}, {"from": 58, "to": 299}, {"from": 58, "to": 166}, {"from": 58, "to": 210}, {"from": 58, "to": 327}, {"from": 48, "to": 299}, {"from": 48, "to": 166}, {"from": 48, "to": 208}, {"from": 48, "to": 211}, {"from": 166, "to": 299}, {"from": 166, "to": 208}, {"from": 166, "to": 211}, {"from": 208, "to": 211}, {"from": 210, "to": 226}, {"from": 84, "to": 327}, {"from": 128, "to": 238}, {"from": 125, "to": 128}, {"from": 128, "to": 292}, {"from": 4, "to": 128}, {"from": 128, "to": 138}, {"from": 128, "to": 288}, {"from": 125, "to": 238}, {"from": 238, "to": 292}, {"from": 4, "to": 238}, {"from": 138, "to": 238}, {"from": 153, "to": 238}, {"from": 238, "to": 288}, {"from": 125, "to": 292}, {"from": 4, "to": 125}, {"from": 125, "to": 138}, {"from": 125, "to": 153}, {"from": 125, "to": 288}, {"from": 4, "to": 292}, {"from": 138, "to": 292}, {"from": 288, "to": 292}, {"from": 4, "to": 138}, {"from": 4, "to": 153}, {"from": 4, "to": 288}, {"from": 138, "to": 153}, {"from": 138, "to": 288}, {"from": 153, "to": 288}, {"from": 175, "to": 222}, {"from": 175, "to": 309}, {"from": 320, "to": 327}, {"from": 222, "to": 320}, {"from": 309, "to": 320}, {"from": 112, "to": 320}, {"from": 80, "to": 324}, {"from": 52, "to": 236}, {"from": 232, "to": 236}, {"from": 197, "to": 236}, {"from": 77, "to": 191}, {"from": 52, "to": 191}, {"from": 52, "to": 68}, {"from": 68, "to": 232}, {"from": 68, "to": 197}, {"from": 56, "to": 324}, {"from": 77, "to": 198}, {"from": 52, "to": 198}, {"from": 300, "to": 324}, {"from": 52, "to": 324}, {"from": 109, "to": 324}, {"from": 189, "to": 324}, {"from": 232, "to": 324}, {"from": 197, "to": 324}, {"from": 149, "to": 210}, {"from": 210, "to": 214}, {"from": 149, "to": 214}, {"from": 128, "to": 327}, {"from": 28, "to": 83}, {"from": 83, "to": 161}, {"from": 83, "to": 306}, {"from": 28, "to": 161}, {"from": 28, "to": 306}, {"from": 161, "to": 306}, {"from": 73, "to": 327}, {"from": 164, "to": 327}, {"from": 51, "to": 327}, {"from": 12, "to": 327}, {"from": 112, "to": 164}, {"from": 51, "to": 112}, {"from": 51, "to": 164}, {"from": 12, "to": 164}, {"from": 12, "to": 51}, {"from": 118, "to": 327}, {"from": 228, "to": 248}, {"from": 255, "to": 303}, {"from": 255, "to": 272}, {"from": 95, "to": 260}, {"from": 46, "to": 327}, {"from": 128, "to": 297}, {"from": 28, "to": 128}, {"from": 128, "to": 161}, {"from": 12, "to": 128}, {"from": 57, "to": 238}, {"from": 57, "to": 125}, {"from": 57, "to": 138}, {"from": 57, "to": 288}, {"from": 238, "to": 297}, {"from": 28, "to": 238}, {"from": 161, "to": 238}, {"from": 12, "to": 238}, {"from": 125, "to": 297}, {"from": 28, "to": 297}, {"from": 161, "to": 297}, {"from": 138, "to": 297}, {"from": 4, "to": 297}, {"from": 12, "to": 297}, {"from": 288, "to": 297}, {"from": 28, "to": 125}, {"from": 125, "to": 161}, {"from": 12, "to": 125}, {"from": 28, "to": 138}, {"from": 4, "to": 28}, {"from": 12, "to": 28}, {"from": 28, "to": 288}, {"from": 138, "to": 161}, {"from": 4, "to": 161}, {"from": 12, "to": 161}, {"from": 161, "to": 288}, {"from": 12, "to": 138}, {"from": 4, "to": 12}, {"from": 12, "to": 288}, {"from": 226, "to": 248}, {"from": 234, "to": 327}, {"from": 54, "to": 234}, {"from": 226, "to": 234}, {"from": 13, "to": 104}, {"from": 13, "to": 106}, {"from": 13, "to": 327}, {"from": 13, "to": 100}, {"from": 13, "to": 44}, {"from": 13, "to": 317}, {"from": 13, "to": 188}, {"from": 13, "to": 81}, {"from": 13, "to": 184}, {"from": 13, "to": 24}, {"from": 13, "to": 289}, {"from": 104, "to": 106}, {"from": 104, "to": 327}, {"from": 44, "to": 104}, {"from": 104, "to": 317}, {"from": 104, "to": 188}, {"from": 81, "to": 104}, {"from": 104, "to": 184}, {"from": 24, "to": 104}, {"from": 104, "to": 289}, {"from": 106, "to": 327}, {"from": 100, "to": 106}, {"from": 44, "to": 106}, {"from": 106, "to": 317}, {"from": 106, "to": 188}, {"from": 81, "to": 106}, {"from": 106, "to": 184}, {"from": 24, "to": 106}, {"from": 106, "to": 289}, {"from": 317, "to": 327}, {"from": 188, "to": 327}, {"from": 184, "to": 327}, {"from": 24, "to": 327}, {"from": 44, "to": 100}, {"from": 100, "to": 317}, {"from": 100, "to": 188}, {"from": 81, "to": 100}, {"from": 100, "to": 184}, {"from": 24, "to": 100}, {"from": 44, "to": 317}, {"from": 44, "to": 188}, {"from": 44, "to": 184}, {"from": 24, "to": 44}, {"from": 188, "to": 317}, {"from": 81, "to": 317}, {"from": 184, "to": 317}, {"from": 24, "to": 317}, {"from": 289, "to": 317}, {"from": 81, "to": 188}, {"from": 184, "to": 188}, {"from": 24, "to": 188}, {"from": 188, "to": 289}, {"from": 81, "to": 184}, {"from": 24, "to": 81}, {"from": 24, "to": 184}, {"from": 184, "to": 289}, {"from": 24, "to": 289}, {"from": 215, "to": 274}, {"from": 28, "to": 327}, {"from": 161, "to": 327}, {"from": 28, "to": 292}, {"from": 161, "to": 292}, {"from": 28, "to": 153}, {"from": 153, "to": 161}, {"from": 159, "to": 247}, {"from": 31, "to": 247}, {"from": 145, "to": 247}, {"from": 10, "to": 247}, {"from": 15, "to": 159}, {"from": 15, "to": 31}, {"from": 10, "to": 15}, {"from": 145, "to": 159}, {"from": 31, "to": 145}, {"from": 10, "to": 145}, {"from": 39, "to": 327}, {"from": 1, "to": 327}, {"from": 39, "to": 226}, {"from": 34, "to": 83}, {"from": 83, "to": 267}, {"from": 28, "to": 34}, {"from": 28, "to": 267}, {"from": 34, "to": 161}, {"from": 161, "to": 267}, {"from": 34, "to": 267}, {"from": 31, "to": 175}, {"from": 159, "to": 175}, {"from": 10, "to": 175}, {"from": 31, "to": 112}, {"from": 112, "to": 159}, {"from": 10, "to": 112}, {"from": 125, "to": 142}, {"from": 142, "to": 292}, {"from": 138, "to": 142}, {"from": 142, "to": 288}, {"from": 105, "to": 238}, {"from": 105, "to": 125}, {"from": 28, "to": 105}, {"from": 105, "to": 161}, {"from": 4, "to": 105}, {"from": 105, "to": 138}, {"from": 12, "to": 105}, {"from": 105, "to": 288}, {"from": 162, "to": 199}, {"from": 205, "to": 226}, {"from": 83, "to": 202}, {"from": 202, "to": 239}, {"from": 28, "to": 202}, {"from": 161, "to": 202}, {"from": 83, "to": 239}, {"from": 83, "to": 113}, {"from": 28, "to": 239}, {"from": 161, "to": 239}, {"from": 28, "to": 113}, {"from": 113, "to": 161}, {"from": 39, "to": 234}, {"from": 144, "to": 270}, {"from": 88, "to": 270}, {"from": 88, "to": 144}, {"from": 237, "to": 327}, {"from": 124, "to": 285}, {"from": 36, "to": 124}, {"from": 17, "to": 124}, {"from": 124, "to": 229}, {"from": 124, "to": 300}, {"from": 124, "to": 209}, {"from": 36, "to": 285}, {"from": 17, "to": 285}, {"from": 204, "to": 285}, {"from": 229, "to": 285}, {"from": 167, "to": 285}, {"from": 209, "to": 285}, {"from": 52, "to": 285}, {"from": 17, "to": 36}, {"from": 36, "to": 229}, {"from": 36, "to": 300}, {"from": 36, "to": 209}, {"from": 17, "to": 229}, {"from": 17, "to": 209}, {"from": 91, "to": 130}, {"from": 100, "to": 130}, {"from": 130, "to": 189}, {"from": 109, "to": 130}, {"from": 52, "to": 204}, {"from": 167, "to": 229}, {"from": 209, "to": 229}, {"from": 229, "to": 324}, {"from": 167, "to": 300}, {"from": 209, "to": 300}, {"from": 167, "to": 209}, {"from": 52, "to": 167}, {"from": 56, "to": 167}, {"from": 167, "to": 189}, {"from": 109, "to": 167}, {"from": 167, "to": 197}, {"from": 167, "to": 324}, {"from": 9, "to": 52}, {"from": 9, "to": 57}, {"from": 52, "to": 209}, {"from": 56, "to": 209}, {"from": 189, "to": 209}, {"from": 109, "to": 209}, {"from": 197, "to": 209}, {"from": 209, "to": 324}, {"from": 52, "to": 57}, {"from": 52, "to": 100}, {"from": 56, "to": 100}, {"from": 100, "to": 232}, {"from": 100, "to": 189}, {"from": 100, "to": 109}, {"from": 100, "to": 197}, {"from": 58, "to": 105}, {"from": 58, "to": 128}, {"from": 58, "to": 125}, {"from": 58, "to": 292}, {"from": 4, "to": 58}, {"from": 58, "to": 138}, {"from": 58, "to": 153}, {"from": 58, "to": 288}, {"from": 52, "to": 274}, {"from": 52, "to": 215}, {"from": 239, "to": 306}, {"from": 202, "to": 306}, {"from": 247, "to": 327}, {"from": 15, "to": 327}, {"from": 28, "to": 100}, {"from": 100, "to": 161}, {"from": 100, "to": 306}, {"from": 52, "to": 307}, {"from": 232, "to": 307}, {"from": 52, "to": 135}, {"from": 18, "to": 52}, {"from": 135, "to": 232}, {"from": 18, "to": 232}, {"from": 57, "to": 129}, {"from": 57, "to": 148}, {"from": 35, "to": 287}, {"from": 12, "to": 35}, {"from": 214, "to": 277}, {"from": 230, "to": 277}, {"from": 151, "to": 277}, {"from": 214, "to": 230}, {"from": 151, "to": 214}, {"from": 151, "to": 230}, {"from": 274, "to": 322}, {"from": 93, "to": 274}, {"from": 172, "to": 274}, {"from": 23, "to": 274}, {"from": 216, "to": 274}, {"from": 215, "to": 322}, {"from": 93, "to": 215}, {"from": 172, "to": 215}, {"from": 23, "to": 215}, {"from": 215, "to": 216}, {"from": 52, "to": 322}, {"from": 52, "to": 93}, {"from": 52, "to": 172}, {"from": 23, "to": 52}, {"from": 52, "to": 216}, {"from": 23, "to": 322}, {"from": 216, "to": 322}, {"from": 23, "to": 93}, {"from": 93, "to": 216}, {"from": 23, "to": 172}, {"from": 172, "to": 216}, {"from": 177, "to": 259}, {"from": 147, "to": 177}, {"from": 201, "to": 259}, {"from": 147, "to": 201}, {"from": 33, "to": 325}, {"from": 146, "to": 247}, {"from": 15, "to": 146}, {"from": 143, "to": 146}, {"from": 146, "to": 287}, {"from": 139, "to": 146}, {"from": 104, "to": 146}, {"from": 146, "to": 175}, {"from": 79, "to": 146}, {"from": 146, "to": 163}, {"from": 146, "to": 152}, {"from": 146, "to": 223}, {"from": 146, "to": 207}, {"from": 112, "to": 146}, {"from": 12, "to": 146}, {"from": 116, "to": 146}, {"from": 59, "to": 259}, {"from": 59, "to": 147}, {"from": 59, "to": 99}, {"from": 141, "to": 194}, {"from": 141, "to": 226}, {"from": 224, "to": 319}, {"from": 194, "to": 226}, {"from": 83, "to": 201}, {"from": 83, "to": 266}, {"from": 160, "to": 244}, {"from": 159, "to": 243}, {"from": 11, "to": 243}, {"from": 223, "to": 243}, {"from": 96, "to": 243}, {"from": 31, "to": 243}, {"from": 10, "to": 243}, {"from": 11, "to": 159}, {"from": 159, "to": 223}, {"from": 96, "to": 159}, {"from": 11, "to": 223}, {"from": 11, "to": 96}, {"from": 11, "to": 31}, {"from": 10, "to": 11}, {"from": 96, "to": 223}, {"from": 31, "to": 223}, {"from": 10, "to": 223}, {"from": 31, "to": 96}, {"from": 10, "to": 96}, {"from": 171, "to": 191}, {"from": 171, "to": 198}, {"from": 186, "to": 191}, {"from": 186, "to": 198}, {"from": 191, "to": 262}, {"from": 198, "to": 262}, {"from": 161, "to": 194}, {"from": 161, "to": 226}, {"from": 28, "to": 194}, {"from": 28, "to": 226}, {"from": 222, "to": 236}, {"from": 236, "to": 309}, {"from": 68, "to": 222}, {"from": 68, "to": 309}, {"from": 50, "to": 140}, {"from": 140, "to": 289}, {"from": 77, "to": 247}, {"from": 15, "to": 77}, {"from": 173, "to": 274}, {"from": 173, "to": 215}, {"from": 52, "to": 173}, {"from": 284, "to": 327}, {"from": 77, "to": 175}, {"from": 77, "to": 112}, {"from": 177, "to": 287}, {"from": 175, "to": 177}, {"from": 12, "to": 177}, {"from": 112, "to": 177}, {"from": 35, "to": 247}, {"from": 15, "to": 35}, {"from": 35, "to": 104}, {"from": 35, "to": 175}, {"from": 35, "to": 112}, {"from": 82, "to": 222}, {"from": 82, "to": 309}, {"from": 77, "to": 150}, {"from": 150, "to": 327}, {"from": 52, "to": 316}, {"from": 38, "to": 52}, {"from": 38, "to": 316}, {"from": 289, "to": 316}, {"from": 38, "to": 283}, {"from": 100, "to": 253}, {"from": 100, "to": 214}, {"from": 301, "to": 311}, {"from": 34, "to": 306}, {"from": 267, "to": 306}, {"from": 24, "to": 247}, {"from": 188, "to": 247}, {"from": 15, "to": 24}, {"from": 15, "to": 188}, {"from": 29, "to": 134}, {"from": 92, "to": 327}, {"from": 310, "to": 327}, {"from": 177, "to": 217}, {"from": 83, "to": 313}, {"from": 98, "to": 327}, {"from": 98, "to": 100}, {"from": 185, "to": 327}, {"from": 13, "to": 214}, {"from": 104, "to": 214}, {"from": 106, "to": 214}, {"from": 214, "to": 313}, {"from": 188, "to": 214}, {"from": 24, "to": 214}, {"from": 184, "to": 214}, {"from": 214, "to": 289}, {"from": 214, "to": 317}, {"from": 71, "to": 327}, {"from": 68, "to": 287}, {"from": 236, "to": 287}, {"from": 29, "to": 52}, {"from": 124, "to": 174}, {"from": 36, "to": 174}, {"from": 52, "to": 177}, {"from": 68, "to": 177}, {"from": 177, "to": 236}, {"from": 59, "to": 177}, {"from": 99, "to": 177}, {"from": 177, "to": 232}, {"from": 177, "to": 197}, {"from": 52, "to": 259}, {"from": 52, "to": 147}, {"from": 52, "to": 59}, {"from": 52, "to": 99}, {"from": 68, "to": 259}, {"from": 236, "to": 259}, {"from": 232, "to": 259}, {"from": 197, "to": 259}, {"from": 68, "to": 147}, {"from": 59, "to": 68}, {"from": 68, "to": 99}, {"from": 114, "to": 315}, {"from": 147, "to": 236}, {"from": 59, "to": 236}, {"from": 99, "to": 236}, {"from": 147, "to": 232}, {"from": 147, "to": 197}, {"from": 59, "to": 232}, {"from": 59, "to": 197}, {"from": 99, "to": 232}, {"from": 99, "to": 197}, {"from": 57, "to": 226}, {"from": 57, "to": 228}, {"from": 130, "to": 231}, {"from": 222, "to": 289}, {"from": 289, "to": 309}, {"from": 57, "to": 98}, {"from": 103, "to": 174}, {"from": 103, "to": 131}, {"from": 131, "to": 174}, {"from": 174, "to": 305}, {"from": 131, "to": 305}, {"from": 73, "to": 271}, {"from": 77, "to": 311}, {"from": 60, "to": 311}, {"from": 195, "to": 311}, {"from": 38, "to": 327}, {"from": 148, "to": 327}, {"from": 13, "to": 52}, {"from": 52, "to": 106}, {"from": 13, "to": 253}, {"from": 13, "to": 56}, {"from": 13, "to": 109}, {"from": 13, "to": 189}, {"from": 13, "to": 50}, {"from": 13, "to": 197}, {"from": 106, "to": 253}, {"from": 56, "to": 106}, {"from": 106, "to": 109}, {"from": 106, "to": 189}, {"from": 50, "to": 106}, {"from": 106, "to": 197}, {"from": 83, "to": 185}, {"from": 185, "to": 294}, {"from": 196, "to": 294}, {"from": 19, "to": 226}, {"from": 251, "to": 327}, {"from": 201, "to": 294}, {"from": 177, "to": 327}, {"from": 271, "to": 327}, {"from": 77, "to": 83}, {"from": 100, "to": 177}, {"from": 44, "to": 214}, {"from": 222, "to": 276}, {"from": 276, "to": 309}, {"from": 83, "to": 87}, {"from": 198, "to": 215}, {"from": 191, "to": 215}, {"from": 121, "to": 327}, {"from": 245, "to": 327}, {"from": 52, "to": 313}, {"from": 29, "to": 313}, {"from": 201, "to": 231}, {"from": 231, "to": 327}, {"from": 177, "to": 214}, {"from": 130, "to": 271}, {"from": 73, "to": 130}, {"from": 222, "to": 291}, {"from": 291, "to": 309}]);
+
+nodeColors = {};
+allNodes = nodes.get({ returnType: "Object" });
+for (nodeId in allNodes) {
+nodeColors[nodeId] = allNodes[nodeId].color;
+}
+allEdges = edges.get({ returnType: "Object" });
+// adding nodes and edges to the graph
+data = {nodes: nodes, edges: edges};
+
+var options = {
+"configure": {
+"enabled": true,
+"filter": [
+"physics"
+]
+},
+"edges": {
+"color": {
+"inherit": true
+},
+"smooth": {
+"enabled": true,
+"type": "dynamic"
+}
+},
+"interaction": {
+"dragNodes": true,
+"hideEdgesOnDrag": false,
+"hideNodesOnDrag": false
+},
+"physics": {
+"enabled": true,
+"forceAtlas2Based": {
+"avoidOverlap": 0.1,
+"centralGravity": 0.01,
+"damping": 0.4,
+"gravitationalConstant": -50,
+"springConstant": 0.08,
+"springLength": 100
+},
+"solver": "forceAtlas2Based",
+"stabilization": {
+"enabled": true,
+"fit": true,
+"iterations": 1000,
+"onlyDynamicEdges": false,
+"updateInterval": 50
+}
+}
+};
+
+
+
+
+
+// if this network requires displaying the configure window,
+// put it in its div
+options.configure["container"] = document.getElementById("config");
+
+
+network = new vis.Network(container, data, options);
+
+
+
+
+
+
+
+
+
+network.on("stabilizationProgress", function(params) {
+document.getElementById('loadingBar').removeAttribute("style");
+var maxWidth = 496;
+var minWidth = 20;
+var widthFactor = params.iterations/params.total;
+var width = Math.max(minWidth,maxWidth * widthFactor);
+document.getElementById('bar').style.width = width + 'px';
+document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+});
+network.once("stabilizationIterationsDone", function() {
+document.getElementById('text').innerHTML = '100%';
+document.getElementById('bar').style.width = '496px';
+document.getElementById('loadingBar').style.opacity = 0;
+// really clean the dom element
+setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+});
+
+
+return network;
+
+}
+drawGraph();
+</script>
+</body>
+</html>
